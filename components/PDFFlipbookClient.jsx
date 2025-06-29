@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { BounceLoader } from 'react-spinners';
@@ -25,7 +26,7 @@ const PDFFlipbookClient = ({ pdfurl }) => {
   }, []);
 
   useEffect(() => {
-    const loadPdf = async () => {
+    const loadPDF = async () => {
       const pdfjsLib = await import('pdfjs-dist/build/pdf');
       pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
 
@@ -33,8 +34,7 @@ const PDFFlipbookClient = ({ pdfurl }) => {
         const loadingTask = pdfjsLib.getDocument(pdfurl);
         const pdf = await loadingTask.promise;
 
-        const pagesData = [];
-
+        const pagesImages = [];
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const viewport = page.getViewport({ scale: 1.5 });
@@ -45,19 +45,18 @@ const PDFFlipbookClient = ({ pdfurl }) => {
           canvas.width = viewport.width;
 
           await page.render({ canvasContext: context, viewport }).promise;
-          const imageUrl = canvas.toDataURL();
-          pagesData.push(imageUrl);
+          pagesImages.push(canvas.toDataURL());
         }
 
-        setPages(pagesData);
-      } catch (err) {
-        console.error('PDF load error:', err);
+        setPages(pagesImages);
+      } catch (error) {
+        console.error('Failed to load PDF:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadPdf();
+    loadPDF();
   }, [pdfurl]);
 
   return (
@@ -68,7 +67,7 @@ const PDFFlipbookClient = ({ pdfurl }) => {
           <BounceLoader size={40} color="#2563EB" />
         </div>
       ) : (
-        <div className="p-2 sm:p-0 bg-white rounded-md shadow-lg">
+        <div className="p-2 sm:p-0 bg-white rounded-md shadow-lg touch-pan-x">
           <HTMLFlipBook
             width={dimensions.width}
             height={dimensions.height}
@@ -76,14 +75,14 @@ const PDFFlipbookClient = ({ pdfurl }) => {
             mobileScrollSupport={true}
             className="rounded-md"
           >
-            {pages.map((img, idx) => (
+            {pages.map((img, index) => (
               <div
-                key={idx}
+                key={index}
                 className="bg-white flex items-center justify-center overflow-hidden"
               >
                 <img
                   src={img}
-                  alt={`Page ${idx + 1}`}
+                  alt={`Page ${index + 1}`}
                   className="w-full h-full object-contain"
                 />
               </div>
